@@ -5,16 +5,16 @@
 
 int main(void)
 {
-    FILE * file_path;
+    FILE *file_path;
     file_path = fopen("part_one_input.txt", "r");
-    //file_path = fopen("sample.txt", "r");
+    // file_path = fopen("sample.txt", "r");
 
     if (file_path == NULL)
         exit(EXIT_FAILURE);
-    
+
     ssize_t read;
     size_t max_len = 100;
-    char* line = malloc(max_len);
+    char *line = malloc(max_len);
 
     int track_count = 0;
     int num = -1;
@@ -24,12 +24,12 @@ int main(void)
         printf("\nLine %s\n", line);
         int first = -1;
         int second = 0;
-        for (int i=0; line[i] != '\0'; i++)
+        for (int i = 0; line[i] != '\0'; i++)
         {
             // Number check
             num = line[i] - '0';
 
-            // Check if it is a character if so continue
+            // Check if it is not a character otherwise check if matching string to number
             if (0 > num || num > 9)
             {
                 // Spelled out check
@@ -79,7 +79,7 @@ int main(void)
             // Check if the int is a number and if the number is 0
             if (num != 0)
             {
-                // if it is a number check if first has been done and 
+                // if it is a number check if first has been done and
                 if (first == -1)
                 {
                     first = num * 10;
@@ -87,7 +87,7 @@ int main(void)
                 second = num;
             }
         }
-        num = 0;
+        // TODO: Find something other than memset...
         memset(line, 0, sizeof(line));
         printf("Found %d and %d\n", first, second);
         track_count += (first + second);
@@ -96,9 +96,7 @@ int main(void)
     printf("Count is: %d\n", track_count);
 
     fclose(file_path);
-    if(line)
+    if (line)
         free(line);
     exit(EXIT_SUCCESS);
-
-
 }
