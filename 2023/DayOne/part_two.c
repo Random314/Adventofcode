@@ -2,9 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> /* memset */
+#include <time.h>
 
 int main(void)
 {
+    // Time start
+    clock_t start = clock();
+
     FILE *file_path;
     file_path = fopen("part_one_input.txt", "r");
     // file_path = fopen("sample.txt", "r");
@@ -21,7 +25,7 @@ int main(void)
     // Get each line and add the value from the first number found append the last number and add to total count
     while (fgets(line, max_len, file_path) != NULL)
     {
-        printf("\nLine %s\n", line);
+        // printf("\nLine %s\n", line);
         int first = -1;
         int second = 0;
         for (int i = 0; line[i] != '\0'; i++)
@@ -75,22 +79,22 @@ int main(void)
                 }
             }
 
-            printf("number %d, letter %c\n", num, line[i]);
-            // Check if the int is a number and if the number is 0
+            // printf("number %d, letter %c\n", num, line[i]);
+            //  Check if the int is a number and if the number is 0
             if (num != 0)
             {
                 // if it is a number check if first has been done and
                 if (first == -1)
                 {
-                    first = num * 10;
+                    first = num;
                 }
                 second = num;
             }
         }
         // TODO: Find something other than memset...
-        memset(line, 0, sizeof(line));
-        printf("Found %d and %d\n", first, second);
-        track_count += (first + second);
+        // memset(line, 0, sizeof(line));
+        // printf("Found %d and %d\n", first, second);
+        track_count += (first * 10 + second);
     }
 
     printf("Count is: %d\n", track_count);
@@ -98,5 +102,12 @@ int main(void)
     fclose(file_path);
     if (line)
         free(line);
+
+    // Check performance
+    // Get the current time again.
+    clock_t end = clock();
+    double elapsed = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("Elapsed time: %f seconds\n", elapsed);
+
     exit(EXIT_SUCCESS);
 }
