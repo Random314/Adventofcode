@@ -45,7 +45,6 @@ int main(void)
                 second = num;
             }
         }
-        memset(line, 0, sizeof(line));
         printf("Found %d and %d\n", first, second);
         track_count += (first + second);
     }
