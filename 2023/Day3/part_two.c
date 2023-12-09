@@ -13,11 +13,12 @@ struct symbol_list
     int position;
     int row;
 
+#if DEBUG_CODE
     // Debug
     char symbol;
+#endif
 
     struct symbol_list *next;
-    struct symbol_list *previous;
 };
 
 struct digit_list
@@ -29,7 +30,6 @@ struct digit_list
     int digit[3];
 
     struct digit_list *next;
-    struct digit_list *previous;
 };
 
 struct symbol_list *symbol_head = NULL;
@@ -52,9 +52,8 @@ void insertNode(struct symbol_list *symbol_node, struct digit_list *digit_node)
         }
         else
         {
-            symbol_node->previous = symbol_end; // Add previous pointer to new node
-            symbol_end->next = symbol_node;     // Update next pointer
-            symbol_end = symbol_node;           // Update end node
+            symbol_end->next = symbol_node; // Update next pointer
+            symbol_end = symbol_node;       // Update end node
         }
         return; // Only one node should be updated at a time
     }
@@ -69,7 +68,6 @@ void insertNode(struct symbol_list *symbol_node, struct digit_list *digit_node)
         }
         else
         {
-            digit_node->previous = digit_end;
             digit_end->next = digit_node; // Update next pointer
             digit_end = digit_node;       // Update end node
         }
@@ -112,32 +110,37 @@ void printDigitList(void)
 #endif
 }
 
+struct digit_list *findPreviousNode(struct digit_list *node)
+{
+    struct digit_list *prev_node = digit_head;
+    while (1)
+    {
+        if (prev_node->next == node)
+            return prev_node;
+        prev_node = prev_node->next;
+    }
+}
+
 void removeDigitNode(struct digit_list *node)
 {
+    // Most likely case
     if (node != digit_head && node != digit_end)
     {
-        node->previous->next = node->next;
-        node->next->previous = node->previous;
-        return;
-    }
-
-    if (node == digit_head && node == digit_end)
-    {
-        node->next = NULL; // needed for logic loop, needs to set to NULL
-        digit_head = NULL;
-        digit_end = NULL;
+        findPreviousNode(node)->next = node->next;
         return;
     }
 
     if (node == digit_head)
     {
         digit_head = node->next;
-        return;
     }
 
-    if (node == digit_end)
+    // Least likely
+    if (digit_head == digit_end)
     {
-        digit_end = node->previous;
+        digit_head = NULL;
+        digit_end = NULL;
+        return;
     }
 }
 
@@ -221,7 +224,9 @@ void test_code()
                 struct symbol_list *new_node = (struct symbol_list *)malloc(sizeof(struct symbol_list));
                 new_node->position = i;
                 new_node->row = current_row;
+#if DEBUG_CODE
                 new_node->symbol = test_character;
+#endif
                 insertNode(new_node, NULL);
                 continue;
             }
@@ -278,8 +283,6 @@ void test_code()
 #endif
                 digits_found[found_index] = getDigitFromNode(digit_current);
                 found_index += 1;
-                if (digit_current == digit_end && symbol_current == symbol_end)
-                    break;
                 removeDigitNode(digit_current);
             }
 
