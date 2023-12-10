@@ -3,33 +3,33 @@
 #include <string.h>
 #include <time.h>
 
-#define DEBUG_CODE 0
-#define PERFORMANCE_CODE 1
+#define DEBUG_CODE_ON 0
 
-#define DAY 0 // Update
+#define DAY 4
 #define PART 2
-
-int execute = DEBUG_CODE;
 
 void test_code()
 {
     FILE *file_path;
+#if DEBUG_CODE_ON
+    file_path = fopen("sample_input.txt", "r");
+#else
     file_path = fopen("input.txt", "r");
-    // file_path = fopen("sample_input.txt", "r");
-
+#endif
     if (file_path == NULL)
         exit(EXIT_FAILURE);
 
     ssize_t read;
     size_t max_len = 400;
     char *line = malloc(max_len);
-    int answer = 0; // Update as needed
 
+    int answer = 0; // Update as needed
     // Get each line from the file input
     while (fgets(line, max_len, file_path) != NULL)
     {
-        if (execute == DEBUG_CODE)
-            printf("\nInput: %s\n", line);
+#if DEBUG_CODE_ON
+        printf("\nInput: %s\n", line);
+#endif
     }
 
     printf("Answer is: %d\n", answer);
