@@ -11,7 +11,7 @@
 #define CARD_NUMBERS_MAX 5
 #define ELF_NUMBERS_MAX 8
 #else
-#define QUESTION_ANSWER -1
+#define QUESTION_ANSWER 32001
 #define CARD_NUMBERS_MAX 10
 #define ELF_NUMBERS_MAX 25
 #endif
@@ -87,7 +87,6 @@ void test_code()
             if (line[i] == '|')
             {
                 tracking_what = TRACK_ELF_NUM;
-                continue;
 #if DEBUG_CODE_ON
                 printf("Switching to track Elf numbers\n");
 #endif
