@@ -139,6 +139,8 @@ void test_code()
                 }
             }
         }
+
+        // Need to skip no winners = no new cards being given
         if (track_matches == 0)
         {
 #if DEBUG_CODE_ON
@@ -148,6 +150,7 @@ void test_code()
             continue;
         }
 
+        // Track all new copies being added due to winners
         track_cards_pos++;
         for (int m = 0; m < track_matches; m++)
         {
@@ -162,6 +165,7 @@ void test_code()
         }
     }
 
+    // Add up all new copies
     for (int a = 0; a < MAX_TOTAL_BASE_CARDS; a++)
     {
         answer = track_cards[a] + answer + 1;
