@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <time.h>
 
-#define DEBUG_CODE_ON 1
+#define DEBUG_CODE_ON 0
 
 #if DEBUG_CODE_ON
 #define QUESTION_ANSWER 13
@@ -81,16 +81,17 @@ void test_code()
                 tracking_what = TRACK_CARD_NUM;
 #if DEBUG_CODE_ON
                 printf("Switching to track Card numbers\n");
-                continue;
 #endif
+                continue;
             }
             if (line[i] == '|')
             {
                 tracking_what = TRACK_ELF_NUM;
+                continue;
 #if DEBUG_CODE_ON
                 printf("Switching to track Elf numbers\n");
-                continue;
 #endif
+                continue;
             }
 
             // Fill out each card#, card array and elf array
