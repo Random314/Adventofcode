@@ -21,7 +21,7 @@
 #endif
 
 #define DAY 4
-#define PART 1
+#define PART 2
 
 #define TRACK_CARD 0
 #define TRACK_CARD_NUM 1
