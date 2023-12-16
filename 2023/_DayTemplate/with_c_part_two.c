@@ -5,6 +5,12 @@
 
 #define DEBUG_CODE_ON 0
 
+#if DEBUG_CODE_ON
+#define QUESTION_ANSWER 35
+#else
+#define QUESTION_ANSWER -1
+#endif
+
 #define DAY 0 // TODO: Update
 #define PART 2
 
@@ -23,7 +29,7 @@ void test_code()
     size_t max_len = 400;
     char *line = malloc(max_len);
 
-    int answer = 0; // TODO: Update
+    int answer = 0;
     // Get each line from the file input
     while (fgets(line, max_len, file_path) != NULL)
     {
@@ -32,7 +38,7 @@ void test_code()
 #endif
     }
 
-    printf("Answer is: %d\n", answer);
+    printf("My answer is: %d should be %d\n", answer, QUESTION_ANSWER);
 
     // Free file and close
     fclose(file_path);
