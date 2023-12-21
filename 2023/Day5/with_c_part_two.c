@@ -6,12 +6,12 @@
 #include <ctype.h>
 #include <inttypes.h>
 
-#define DEBUG_CODE_ON 1
+#define DEBUG_CODE_ON 0
 
 #if DEBUG_CODE_ON
 #define QUESTION_ANSWER 46
 #else
-#define QUESTION_ANSWER -1
+#define QUESTION_ANSWER 69323688
 #endif
 
 #define DAY 5
@@ -28,57 +28,52 @@
 
 struct seed_tracker_s
 {
-    int value_set;
     uint64_t start_range;
     uint64_t range_value;
 
     struct seed_tracker_s *next_node;
 };
 
-void addTracker(struct seed_tracker_s *map_node, struct seed_tracker_s **map_head, struct seed_tracker_s **map_tail)
+void addTracker(struct seed_tracker_s *map_node, struct seed_tracker_s **map_head)
 {
     map_node->next_node = NULL;
     if (*map_head == NULL)
     {
         (*map_head) = map_node;
-        (*map_tail) = map_node;
+        return;
     }
-    else
+    struct seed_tracker_s *track = *map_head;
+    while (track->next_node != NULL)
     {
-        (*map_tail)->next_node = map_node;
-        (*map_tail) = map_node;
+        track = track->next_node;
     }
+
+    track->next_node = map_node;
 }
 
-void removeNode(struct seed_tracker_s *node, struct seed_tracker_s **map_head, struct seed_tracker_s **map_tail)
+void removeNode(struct seed_tracker_s *node, struct seed_tracker_s **map_head)
 {
     struct seed_tracker_s *track;
-    struct seed_tracker_s *next_track;
     track = *map_head;
     if (*map_head == node)
     {
-        (*map_head) = (*map_head)->next_node;
-    }
-    else
-    {
-        while (track->next_node != node)
+        if ((*map_head)->next_node == NULL)
         {
-            track = track->next_node;
+            (*map_head) = NULL;
+            node = NULL;
         }
+        else
+        {
+            (*map_head) = (*map_head)->next_node;
+        }
+        return;
     }
 
-    if (*map_tail == node)
+    while (track->next_node != node)
     {
-        track->next_node = NULL;
-        *map_tail = node;
+        track = track->next_node;
     }
-    else
-    {
-        track->next_node = node->next_node;
-    }
-
-    if (node)
-        free(node);
+    track->next_node = track->next_node->next_node;
 }
 
 uint64_t getDigit(int *t, char *line)
@@ -137,10 +132,7 @@ void test_code()
     uint64_t map_end = 0;
 
     struct seed_tracker_s *seed_head = NULL;
-    struct seed_tracker_s *seed_tail = NULL;
-
     struct seed_tracker_s *next_map_head = NULL;
-    struct seed_tracker_s *next_map_tail = NULL;
 
     // Get all seed and ranges
     for (int s = 0; seed_line[s] != '\0'; s++)
@@ -157,7 +149,7 @@ void test_code()
         struct seed_tracker_s *seed = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
         seed->start_range = seed_start;
         seed->range_value = seed_range;
-        addTracker(seed, &seed_head, &seed_tail);
+        addTracker(seed, &seed_head);
     }
 
 #if DEBUG_CODE_ON
@@ -167,13 +159,26 @@ void test_code()
     fgets(line, max_len, file_path); // Skip blank line after
     fgets(line, max_len, file_path); // Skip line "seed-to-soil map:"
 
+    struct seed_tracker_s *seed_node;
+
     while (fgets(line, max_len, file_path) != NULL)
     {
         // Move pointer forward as we progress down the file
         if (isalpha(line[0]))
         {
-            seed_head = next_map_head;
-            seed_tail = next_map_head;
+            if (seed_head == NULL)
+            {
+                seed_head = next_map_head;
+                next_map_head = NULL;
+                continue;
+            }
+            struct seed_tracker_s *track = seed_head;
+            while (track->next_node != NULL)
+            {
+                track = track->next_node;
+            }
+            track->next_node = next_map_head;
+            next_map_head = NULL;
             continue;
         }
 
@@ -185,44 +190,113 @@ void test_code()
             map_start = getDigit(&pos, line);
             pos++;
             map_range = getDigit(&pos, line);
-            map_end = map_start + map_range;
-            map_next_end = map_next_start + map_range;
+            map_end = map_start + map_range - 1;
+            map_next_end = map_next_start + map_range - 1;
         }
         else // Cover blank line
         {
             continue;
         }
 
-        struct seed_tracker_s *seed_node;
         seed_node = seed_head;
         while (seed_node != NULL)
         {
             seed_start = seed_node->start_range;
             seed_range = seed_node->range_value;
-            seed_end = seed_start + seed_range;
+            seed_end = seed_start + seed_range - 1;
 
             // Out side range dont care about them for now
-            if (seed_end < map_start || map_end < seed_start)
+            if (seed_end <= map_start || map_end < seed_start)
             {
                 seed_node = seed_node->next_node;
                 continue;
             }
 
-            // Between both, create new node and remove current
-            if (seed_start < map_end && seed_end < map_end)
+            if (seed_start < map_start)
             {
-                struct seed_tracker_s *map_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+                // Left side update
+                seed_node->range_value = map_start - seed_start;
 
-                map_node->start_range = seed_start - map_start + map_next_start;
-                map_node->range_value = map_end - seed_end + map_next_start;
+                // If the seed falls in the map range
+                if (seed_end <= map_end)
+                {
+                    // create new middle
+                    struct seed_tracker_s *mid_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
 
-                addTracker(map_node, &next_map_head, &next_map_tail);
-                seed_node = seed_node->next_node;
-                removeNode(seed_node, &seed_head, &seed_tail);
+                    mid_node->start_range = map_next_start;
+                    uint64_t dif = (map_start - seed_start);
+                    mid_node->range_value = seed_range - dif;
+                    addTracker(mid_node, &next_map_head);
+                }
+                else
+                {
+                    // create new middle node based on map
+                    struct seed_tracker_s *mid_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+
+                    mid_node->start_range = map_next_start;
+                    mid_node->range_value = map_range;
+                    addTracker(mid_node, &next_map_head);
+
+                    // Create the right side
+                    struct seed_tracker_s *right_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+                    right_node->start_range = map_end;
+                    right_node->range_value = seed_end - map_end;
+                    addTracker(right_node, &seed_head);
+                }
+            }
+            // Left side is inside mapping
+            else
+            {
+                // right side is in side
+                if (seed_end <= map_end)
+                {
+                    struct seed_tracker_s *map_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+                    map_node->start_range = seed_start - map_start + map_next_start;
+                    map_node->range_value = seed_range;
+                    addTracker(map_node, &next_map_head);
+                }
+                else
+                {
+                    // Create new left node
+                    struct seed_tracker_s *mid_map_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+                    mid_map_node->start_range = seed_start - map_start + map_next_start;
+                    mid_map_node->range_value = map_end - seed_start;
+                    addTracker(mid_map_node, &next_map_head);
+
+                    // Create new right node
+                    struct seed_tracker_s *right_map_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+                    right_map_node->start_range = map_end + 1;
+                    right_map_node->range_value = seed_end - (map_end);
+                    addTracker(right_map_node, &seed_head);
+                }
+                // Remove original (node No longer needed)
+                struct seed_tracker_s *temp_node;
+                temp_node = seed_node;
+                seed_node = seed_node->next_node; // Moves node forward
+                removeNode(temp_node, &seed_head);
+                free(temp_node);
             }
         }
+    }
 
-        struct seed_tracker_s *map_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
+    seed_node = seed_head;
+    while (seed_node != NULL)
+    {
+        if (seed_node->start_range < answer)
+        {
+            answer = seed_node->start_range;
+        }
+        seed_node = seed_node->next_node;
+    }
+
+    seed_node = next_map_head;
+    while (seed_node != NULL)
+    {
+        if (seed_node->start_range < answer)
+        {
+            answer = seed_node->start_range;
+        }
+        seed_node = seed_node->next_node;
     }
 
     printf("My answer is: %llu should be %d\n", answer, QUESTION_ANSWER);
