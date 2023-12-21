@@ -18,9 +18,9 @@ void test_code()
 {
     FILE *file_path;
 #if DEBUG_CODE_ON
-    file_path = fopen("sample_input.txt", "r");
+    file_path = fopen("_sample.txt", "r");
 #else
-    file_path = fopen("input.txt", "r");
+    file_path = fopen("_input.txt", "r");
 #endif
     if (file_path == NULL)
         exit(EXIT_FAILURE);
