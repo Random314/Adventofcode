@@ -239,7 +239,7 @@ void test_code()
 
                     // Create the right side
                     struct seed_tracker_s *right_node = (struct seed_tracker_s *)malloc(sizeof(struct seed_tracker_s));
-                    right_node->start_range = map_end;
+                    right_node->start_range = map_end + 1;
                     right_node->range_value = seed_end - map_end;
                     addTracker(right_node, &seed_head);
                 }
