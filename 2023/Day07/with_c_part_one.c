@@ -10,7 +10,7 @@
 #if DEBUG_CODE_ON
 #define QUESTION_ANSWER 6440
 #else
-#define QUESTION_ANSWER -1
+#define QUESTION_ANSWER 250347426
 #endif
 
 #define DAY 7
@@ -22,7 +22,7 @@ int hand_type[] = {7, 6, 5, 4, 3, 2, 1};
 struct hand_and_bid
 {
     int hand[5];
-    uint16_t bid;
+    uint32_t bid;
 
     uint8_t hand_type;
 
@@ -32,7 +32,7 @@ struct hand_and_bid
 
 struct hand_and_bid *hb_head = NULL;
 
-uint8_t classifyNode(struct hand_and_bid *node)
+uint32_t classifyNode(struct hand_and_bid *node)
 {
     int matching[5] = {0};
     int match_int[5] = {0};
@@ -105,6 +105,16 @@ uint8_t classifyNode(struct hand_and_bid *node)
     return classification;
 }
 
+uint64_t totalNode(struct hand_and_bid *node)
+{
+    uint64_t return_answer = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        return_answer = node->hand[i] + return_answer * 100;
+    }
+    return return_answer;
+}
+
 void addNode(struct hand_and_bid *node)
 {
     struct hand_and_bid *pointer_node;
@@ -148,44 +158,54 @@ void addNode(struct hand_and_bid *node)
             hb_head = node;
         return;
     }
+    // Check if we found a case we need insert after
+    if (pointer_node->hand_type > node->hand_type)
+    {
+        node->previous = pointer_node;
+        pointer_node->next = node;
+        node->next = pointer_node->next;
+        return;
+    }
 
     // Last check they are equal, need to find the higher ranking
     // Compare pointer node while they are equal check to see if new node is greater than current
     while (pointer_node->hand_type == node->hand_type)
     {
-        for (int i = 0; i < 5; i++)
+        uint64_t pointer_total = totalNode(pointer_node);
+        uint64_t node_total = totalNode(node);
+        if (pointer_total > node_total)
         {
-            if (pointer_node->hand[i] == node->hand[i])
-                continue;
-            if (pointer_node->hand[i] > node->hand[i])
+            if (pointer_node->next != NULL)
             {
-                // Move pointer forward
-                if (pointer_node->next != NULL)
-                    pointer_node = pointer_node->next;
-                break;
+                pointer_node = pointer_node->next;
+                continue;
             }
-
-            // Insert before
-            node->next = pointer_node;
-            node->previous = pointer_node->previous;
-            node->next->previous = node;
-            if (node->previous != NULL)
-                node->previous->next = node;
             else
-                hb_head = node;
-            return;
+            {
+                pointer_node->next = node;
+                node->previous = pointer_node;
+                return;
+            }
         }
 
-        if (pointer_node->next == NULL && pointer_node->hand_type == node->hand_type)
+        if (pointer_total == node_total)
         {
-            pointer_node->next = node;
-            node->previous = pointer_node;
-            return;
+            break;
         }
+
+        // Insert before
+        node->next = pointer_node;
+        node->previous = pointer_node->previous;
+        node->next->previous = node;
+        if (node->previous != NULL)
+            node->previous->next = node;
+        else
+            hb_head = node;
+        return;
     }
 
     if (pointer_node->hand_type < node->hand_type)
-    {
+    { // Insert before
         node->next = pointer_node;
         node->previous = pointer_node->previous;
         node->next->previous = node;
@@ -196,11 +216,14 @@ void addNode(struct hand_and_bid *node)
             hb_head = node;
         return;
     }
-    // Insert after
-    node->previous = pointer_node;
-    node->next = pointer_node->next;
-    pointer_node->next = node;
-    return;
+    else
+    {
+        // Insert after
+        node->previous = pointer_node;
+        node->next = pointer_node->next;
+        pointer_node->next = node;
+        return;
+    }
 }
 
 void printNode()
@@ -213,18 +236,18 @@ void printNode()
         if (pointer_node->previous != NULL)
         {
             int *hand = pointer_node->previous->hand;
-            printf("Previous Node Hand: %d %d %d %d %d\n", hand[0], hand[1], hand[2], hand[3], hand[4]);
+            // printf("Previous Node Hand: %d %d %d %d %d\n", hand[0], hand[1], hand[2], hand[3], hand[4]);
         }
 
         int *chand = pointer_node->hand;
-        printf("Node Hand: %d %d %d %d %d\n", chand[0], chand[1], chand[2], chand[3], chand[4]);
+        // printf("Node Hand: %d %d %d %d %d\n", chand[0], chand[1], chand[2], chand[3], chand[4]);
 
         if (pointer_node->next != NULL)
         {
             int *nhand = pointer_node->next->hand;
-            printf("Next Node Hand: %d %d %d %d %d\n", nhand[0], nhand[1], nhand[2], nhand[3], nhand[4]);
+            // printf("Next Node Hand: %d %d %d %d %d\n", nhand[0], nhand[1], nhand[2], nhand[3], nhand[4]);
         }
-        printf("\n");
+        // printf("\n");
 
         pointer_node = pointer_node->next;
     }
@@ -237,7 +260,12 @@ void printOrder()
 
     while (pointer_node != NULL)
     {
-        printf("%d(%d) ", pointer_node->bid, pointer_node->hand_type);
+        for (int i = 0; i < 5; i++)
+        {
+            printf("%3d ", pointer_node->hand[i]);
+        }
+
+        printf("%d(%d)\n", pointer_node->bid, pointer_node->hand_type);
         pointer_node = pointer_node->next;
     }
     printf("\n");
@@ -246,10 +274,11 @@ void printOrder()
 uint64_t addNodes()
 {
     struct hand_and_bid *pointer_node;
+    struct hand_and_bid *last_node;
     pointer_node = hb_head;
 
     uint64_t answer = 0;
-    uint32_t counter = 1;
+    uint64_t counter = 1;
     while (pointer_node->next != NULL)
     {
         pointer_node = pointer_node->next;
@@ -259,6 +288,10 @@ uint64_t addNodes()
     {
         answer += pointer_node->bid * counter;
         counter++;
+        if (pointer_node->previous == NULL)
+        {
+            last_node = pointer_node;
+        }
         pointer_node = pointer_node->previous;
     }
     return answer;
@@ -328,10 +361,8 @@ void test_code()
 
 #if DEBUG_CODE_ON
     printNode();
-#endif
-    // #if DEBUG_CODE_ON
     printOrder();
-    // #endif
+#endif
     answer = addNodes();
 
     printf("My answer is: %lld should be %d\n", answer, QUESTION_ANSWER);
